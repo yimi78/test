@@ -1,0 +1,49 @@
+function selected(){
+	var pcOrWapSelect = document.getElementById("pcOrWapSelect").value;
+	var pcOrWap = document.getElementById("pcOrWap");
+	var selectSelect = document.getElementById("selectSelect").value;
+	var select = document.getElementById("select");
+
+	if(pcOrWapSelect==null||pcOrWapSelect.length==0){
+		pcOrWapSelect = "3";
+	}
+	if(selectSelect ==null||selectSelect.length==0){
+		selectSelect = "0";
+	}
+	jsSelectItemByValue(pcOrWap,pcOrWapSelect);
+	jsSelectItemByValue(select,selectSelect);
+	
+	// 初始化时间
+	var beginDate = document.getElementById("beginDate").value;
+	var endDate = document.getElementById("endDate").value;
+	if(beginDate == null||beginDate.length==0 ){
+		if(endDate == null||endDate.length==0 ){
+			var myDate = new Date(); 
+			var year = myDate.getFullYear();
+		    var month = myDate.getMonth();
+		    if (month >= 0 && month <= 9) {
+		        month = "0" + month;
+		    }
+		    var day =  myDate.getDate();
+		    if (day >= 0 && day <= 9) {
+		    	day = "0" + day;
+		    }
+		    var time = year + "-" + month+"-"+ day;
+		    document.getElementById("beginDate").value = time;
+		    document.getElementById("endDate").value = time;
+		}
+	}
+
+}
+
+function jsSelectItemByValue(objSelect, objItemText) { 
+	//判断是否存在 
+	var isExit = false; 
+	for (var i = 0; i < objSelect.options.length; i++) { 
+		if (objSelect.options[i].value == objItemText) { 
+			objSelect.options[i].selected = true; 
+			isExit = true; 
+			break; 
+		} 
+	} 
+}

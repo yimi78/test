@@ -1,0 +1,10 @@
+cd /root/koolbao_apps/kmUtilTrade/
+svn up
+mvn clean
+mvn install
+cd /root/koolbao_apps/ssm2/
+svn up
+mvn clean
+mvn install -Dmaven.test.skip=true
+rm -rf /opt/apache-tomcat-7.0.57/webapps/ssm2*
+cp /root/koolbao_apps/ssm2/target/ssm2.war /opt/apache-tomcat-7.0.57/webapps/ssm2.war 

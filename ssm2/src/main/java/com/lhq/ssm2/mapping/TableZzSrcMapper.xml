@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--这块等于dao接口的实现 namespace必须和接口的类路径一样 -->
+<mapper namespace="com.lhq.ssm2.IDao.TableZzSrcDao">
+
+	<select id="getShopByDate" parameterType="HashMap" resultType="Map">
+		SELECT
+		column_name,
+		pv,
+		landing_pv,
+		sv,
+		jump_rate,
+		pat_trades,
+		achieve_trades,
+		achieve_payment,
+		achieve_rate,
+		avg_deep,
+		store_fov,
+		item_fov,
+		cart_user,
+		pat_users,
+		pat_payment,
+		achieve_users,
+		IFNULL(jump_pv, 0) AS jump_pv,
+		round(landing_pv/IFNULL(jump_pv, 0),2) as landing_pv_rate
+		FROM
+		(SELECT
+		add_time,
+		sum(`pv`) as pv,
+		add_time AS column_name,
+		sum(`click`) as landing_pv,
+		sum(`sv`) as sv,
+		ifnull(round((sum(`loss`) / sum(`uv`)) * 100, 2), 0.00) as jump_rate,
+		ifnull(sum(`pat_nums`), 0) as pat_trades,
+		ifnull(sum(`trade_num`), 0)
+		as achieve_trades,
+		ifnull(sum(`trade_sales`), 0.00) as achieve_payment,
+		ifnull(round((sum(`trade_user`) / sum(`sv`)) * 100, 2), 0.00) as
+		achieve_rate,
+		IFNULL(ROUND(SUM(`pv`) / SUM(`uv`), 1), 0) AS avg_deep,
+		sum(`store_fov`) as store_fov,
+		sum(`item_fov`) as item_fov,
+		sum(`cart_user`) as cart_user,
+		sum(`pat_users`) as pat_users,
+		ifnull(sum(`pat_payment`), 0.00) as pat_payment,
+		sum(`trade_user`) as
+		achieve_users,
+		ifnull(round(sum(`trade_sales`) / sum(`trade_user`), 2),
+		0.00) as per_customer,
+		add_time AS column_id
+		<if test="pcOrWap==0">
+			, 'PW' as status
+		</if>
+		<if test="pcOrWap==1">
+			, 'PC' as status
+		</if>
+		<if test="pcOrWap==2">
+			, 'WAP' as status
+		</if>
+		FROM
+		(
+		<if test="pcOrWap!=2">
+			SELECT
+			add_time,
+			click,
+			pv,
+			uv,
+			sv,
+			loss,
+			pat_nums,
+			trade_num,
+			trade_sales,
+			trade_user,
+			store_fov,
+			item_fov,
+			cart_user,
+			pat_users,
+			pat_payment
+			FROM
+			koolbao_mv_${ext}.${shop_id}_zz_src_cur
+			WHERE
+			add_time
+			BETWEEN #{start_date} AND #{end_date}
+			AND task_id = #{task_id}
+		</if>
+		<if test="pcOrWap==0">
+			UNION ALL
+		</if>
+		<if test="pcOrWap!=1">
+			SELECT
+			add_time,
+			click,
+			pv,
+			uv,
+			sv,
+			loss,
+			pat_nums,
+			trade_num,
+			trade_sales,
+			trade_user,
+			store_fov,
+			item_fov,
+			cart_user,
+			pat_users,
+			pat_payment
+			FROM
+			koolbao_mv_${ext}.${shop_id}_zz_src_cur_wap
+			WHERE
+			add_time BETWEEN #{start_date} AND #{end_date}
+			AND task_id =
+			#{task_id}
+			AND TO_DAYS(sub_time) BETWEEN TO_DAYS(add_time) AND
+			TO_DAYS(add_time) +
+			15
+		</if>
+		) AS c
+		GROUP BY add_time) AS a
+		LEFT JOIN
+		(select
+		IFNULL(sum(`pv`), 0) AS
+		jump_pv, task_date
+		from
+		koolbao_realtime.sumary_detail
+		where
+		task_id =
+		#{task_id} AND shop_id = #{shop_id}
+		<if test="pcOrWap==1">
+			AND device = 'PC'
+		</if>
+		<if test="pcOrWap==2">
+			AND device = 'WAP'
+		</if>
+		AND task_date BETWEEN #{start_date} AND #{end_date}
+		group by task_date)
+		AS b ON a.column_name = b.task_date
+		ORDER BY add_time desc
+	</select>
+
+	<select id="getShopClick" parameterType="HashMap" resultType="Map">
+		select
+		( '' + task_date + device+ mvoid + mvcid + mvsid ) as
+		tag,IFNULL(sum(`pv`), 0) as pv
+		from
+		koolbao_realtime.sumary_detail
+		where
+		task_id = #{task_id} AND shop_id = #{shop_id}
+		AND task_date BETWEEN #{start_date} AND #{end_date}
+		group by
+		task_date,device,mvoid ,mvcid ,mvsid
+	</select>
+
+	<select id="getShopWapOrPc" parameterType="HashMap" resultType="Map">
+		SELECT 
+			add_time
+			,cur_id 
+			,group_id 
+			,plan_id
+			,count(uv)
+		FROM
+			koolbao_mv_${ext}.${shop_id}_zz_src_cur${isWap}
+		WHERE
+			add_time BETWEEN #{start_date} AND #{end_date}
+			AND add_time = sub_time
+			AND	task_id = #{task_id}
+		group by add_time,cur_id ,group_id ,plan_id
+	</select>
+	<insert id="insertShopInfo" parameterType="HashMap">
+		insert into
+			koolbao_mv_${ext}.${shop_id}_zz_src_cur${isWap}
+			(pv,uv,sv,add_time,loss,sub_time,src_id,group_id,plan_id,click,count_sv,stay,task_id,cur_id,pos_id) 	values
+				<foreach collection="data" item="cur" index="index" separator=",">
+					(#{cur.pv},#{cur.uv},#{cur.sv},#{cur.add_time},#{cur.loss},#{cur.sub_time},#{cur.src_id},#{cur.group_id},
+					#{cur.plan_id},#{cur.click},#{cur.count_sv},#{cur.stay},#{cur.task_id},#{cur.cur_id},#{cur.pos_id});
+				</foreach>
+	</insert>
+</mapper>
