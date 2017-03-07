@@ -1,0 +1,2 @@
+{"name":"按照xx来归类","default":"稳健","values":[{"param":"1.BRANCH_NO","condition":"{1.BRANCH_NO}==213","resultExpr":"'中产'"},{"param":"1.BRANCH_NO","condition":"{1.BRANCH_NO}==220","resultExpr":"'低产'"}]}
+{"name":"按照年龄来归类","default":"壮年","values":[{"param":"1.BIRTHDAY","condition":"{1.BIRTHDAY} > 20000101","resultExpr":"'少年'"},{"param":"1.BIRTHDAY","condition":"{1.BIRTHDAY} < 20000101","resultExpr":"'青年'"}]}
