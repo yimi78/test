@@ -65,24 +65,22 @@ public class OpRule {
 			double min = 0;
 			double tmp = 0;
 
-			if ("sum".equals(groupType) || "min".equals(groupType)
-					|| "max".equals(groupType)) {
-
-			}
 			Date begin = getBeginTime();
 			String time = "";
 
 			while (!begin.after(getEndTime())) {
+				String ruleTmp = rule;
 				index++;
 				time = sdf.format(begin);
 				// 参数替换
 				try {
 					for (String item : params.split(",")) {
 						if (timeTag.containsKey(item + time)) {
-							rule = rule.replace(item, timeTag.get(item + time));
+							ruleTmp = ruleTmp.replace(item,
+									timeTag.get(item + time));
 						}
 					}
-					tmp = (double) jse.eval(rule);
+					tmp = (double) jse.eval(ruleTmp);
 					if (max < tmp) {
 						max = tmp;
 					}

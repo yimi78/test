@@ -1,0 +1,25 @@
+基础内容
+动态标签：每天会产生（job1）
+{"tagType":"交易时段"，"tagname":"交易人次","tagValue":"3","rule":"","dt":"2016-12-21"}
+{"tagType":"交易时段"，"tagname":"交易人次","tagValue":"2","rule":"","dt":"2016-12-20"}
+
+固定标签：一段时间内不会变化的（job2）
+{"tagType":"身份属性"，"tagname":"年龄","tagValue":"22","dt":""}
+{"tagType":"股票"，"tagname":"最大偏好","tagValue":"恒生","dt":""}
+
+
+标签规则
+{"tagType":"股票","tagname":"资产评定","tagValue":"中产","type":"string","values":[{"params":"{身份属性.年龄}","rule":"{身份属性.年龄}","judge":">20"}]}
+{"tagType":"股票","tagname":"活跃性","tagValue":"活跃","type":"string","values":[{"params":"{交易时段.交易人次}","rule":"{交易时段.交易人次}","judge":">1","dt":"2017-03-07:2017-03-08","groupType":"sum"}]}
+{"tagType":"股票","tagname":"活跃性","tagValue":"计算","type":"int","values":[{"params":"{交易时段.交易人次},{身份属性.年龄}","rule":"{交易时段.交易人次}*10/{身份属性.年龄}","judge":"","dt":"2017-03-07:2017-03-08","groupType":"sum"}]}
+
+按照计算方式，分为2种（job3）
+	为了区分用户的打固定标签（如大于20岁的为中产）  参数（"tagValue":"中产"）
+	计算标签（每个月的消费频次）参数（"tagValue":"计算"）
+按照周期算
+	任务分为一次性任务：没有参数dt
+	任务分为周期任务： dt=1,7,30   每个按照周期运算的标签会获得一个时间属性(key为dt,value为计划运行那一天2017-10-10),用于可以迭代计算。
+	
+问题
+      周期内文本怎么处理
+      周期内两个指标不同的日期
