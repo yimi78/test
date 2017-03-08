@@ -81,10 +81,10 @@ public class Expr {
 				String resultExpr = expr.get("resultExpr");
 				for (String item : paramlist) {
 					String repetition = "\\{" + item + "\\}";
-					condition = condition
-							.replaceAll(repetition, data.get(item));
-					resultExpr = resultExpr.replaceAll(repetition,
-							data.get(item));
+					// condition = condition
+					// .replaceAll(repetition, data.get(item));
+					// resultExpr = resultExpr.replaceAll(repetition,
+					// data.get(item));
 				}
 				try {
 					if ("true".equals(jse.eval(condition).toString())) {

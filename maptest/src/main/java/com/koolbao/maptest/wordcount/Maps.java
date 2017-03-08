@@ -9,7 +9,7 @@
  * @date: Dec 22, 2016 3:35:26 PM 
  * @version: V1.0   
  */
-package com.koolbao.maptest;
+package com.koolbao.maptest.wordcount;
 
 import java.io.IOException;
 

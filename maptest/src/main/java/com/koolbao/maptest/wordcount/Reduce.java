@@ -9,7 +9,7 @@
  * @date: Dec 22, 2016 3:36:08 PM 
  * @version: V1.0   
  */
-package com.koolbao.maptest;
+package com.koolbao.maptest.wordcount;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 		// 进行统计
 		for (Text text : values) {
 
-			java.util.Map<String, String> ss = expr.getTag(map);
+			java.util.Map<String, String> ss = expr.getTag(null);
 
 			if (ss == null || ss.isEmpty()) {
 				context.getCounter("不符合的数据", "不符合的数据").increment(1);
