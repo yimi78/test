@@ -1,0 +1,2 @@
+{"tagType":"股票"，"tagname":"资产评定","tagValue":"中产","type":"string","values":[{"rule":"{身份属性.年龄}","judge":">20"}]}
+{"tagType":"股票"，"tagname":"活跃性","tagValue":"活跃","type":"string","values":["rule":"{交易时段.交易人次}","judge":">1","dt":"2016-12-20:2016-12-21","groupType":"sum"]}
