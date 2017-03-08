@@ -12,6 +12,7 @@
 package com.koolbao.maptest.tag;
 
 import java.net.URI;
+import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -27,8 +28,7 @@ public class DoubleTag {
 
 	public static void main(String[] args) throws Exception {
 
-		System.setProperty("hadoop.home.dir",
-				"C:\\development\\Development\\hadoop\\hadoop-2.6.0");
+		Date begin = new Date();
 
 		args = new String[] {
 				"input/tag/20170307,input/tag/20170308,input/tag/people",
@@ -57,6 +57,10 @@ public class DoubleTag {
 			fileSystem.delete(out, true);
 		}
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		// System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+		Date end = new Date();
+		job.waitForCompletion(true);
+		System.out.println((end.getTime() - begin.getTime()) / 1000);
 	}
 }

@@ -97,6 +97,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 				if (exprInfo.getResult(jse, timeTag)) {
 					result.add(exprInfo.getResult());
 				}
+				context.getCounter("信息", "正常解析规则").increment(1);
 			} catch (ScriptException e) {
 				// TODO Auto-generated catch block
 				context.getCounter("异常", "异常解析规则").increment(1);
