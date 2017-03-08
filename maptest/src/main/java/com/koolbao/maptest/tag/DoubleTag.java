@@ -11,6 +11,8 @@
  */
 package com.koolbao.maptest.tag;
 
+import java.net.URI;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,9 +27,14 @@ public class DoubleTag {
 
 	public static void main(String[] args) throws Exception {
 
-		args = new String[] { "tag", "output" };
+		System.setProperty("hadoop.home.dir",
+				"C:\\development\\Development\\hadoop\\hadoop-2.6.0");
+
+		args = new String[] {
+				"input/tag/20170307,input/tag/20170308,input/tag/people",
+				"output" };
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, DoubleTag.class.toString());
+		Job job = Job.getInstance(conf, "DoubleTag");
 		job.setJarByClass(DoubleTag.class);
 		job.setMapperClass(Maps.class);
 		job.setReducerClass(Reduce.class);
@@ -35,8 +42,11 @@ public class DoubleTag {
 		job.setOutputKeyClass(Text.class);
 		job.setNumReduceTasks(1);
 		job.setOutputValueClass(Text.class);
-		// job.addCacheFile(new URI("outResource/DoubleTag"));
-		FileInputFormat.addInputPath(job, new Path(args[0]));
+		job.addCacheFile(new URI("outResource/DoubleTag"));
+		for (String file : args[0].split(",")) {
+			FileInputFormat.addInputPath(job, new Path(file));
+		}
+
 		Path out = new Path(args[1]);
 		if (FileSystem.get(conf).exists(out)) {
 			FileSystem fs = FileSystem.get(conf);

@@ -11,7 +11,6 @@
  */
 package com.koolbao.maptest.tag;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,14 +19,15 @@ import java.util.Map;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import com.google.gson.Gson;
-import com.koolbao.maptest.Util.SqlFomat;
-import com.koolbao.maptest.Util.Tables;
 import com.koolbao.maptest.model.DoubleRule;
 
 /**
@@ -38,35 +38,29 @@ import com.koolbao.maptest.model.DoubleRule;
  */
 public class Reduce extends Reducer<Text, Text, Text, Text> {
 
-	DoubleExpr doubleExpr = new DoubleExpr();
-	SqlFomat sql = new SqlFomat();
+	List<DoubleRule> doubleRuleLists = new ArrayList<DoubleRule>(); // 规则集合体
 	Gson gson = new Gson();
-	Tables tables = new Tables();
 
 	/**
-	 * 预处理
+	 * 预处理,读取规则
 	 */
 	@SuppressWarnings("deprecation")
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
 		List<String> list = new ArrayList<String>();
 		try {
-			// Path[] path = context.getLocalCacheFiles();
-			// list =
-			// IOUtils.readLines(FileSystem.get(context.getConfiguration())
-			// .open(path[0]));
-			FileUtils
-					.readLines(new File(
-							"C:\\development\\Development\\Git\\data\\test\\maptest\\outResource\\DoubleTag"));
-			context.getCounter("规则条数", list.size() + "");
+			Path[] path = context.getLocalCacheFiles();
+			list = IOUtils.readLines(FileSystem.get(context.getConfiguration())
+					.open(path[0]));
+			context.getCounter("信息", "规则条数:" + list.size());
 
 			Map<String, Object> expr = new HashMap<String, Object>();
 			for (String item : list) {
 				expr = gson.fromJson(item, expr.getClass());
 				try {
-					doubleExpr.doubleRuleLists.add(new DoubleRule(expr));
+					doubleRuleLists.add(new DoubleRule(expr));
 				} catch (Exception e) {
-					context.getCounter("异常", "规则条数").increment(1);
+					context.getCounter("异常", "异常规则条数").increment(1);
 				}
 			}
 		} catch (IOException e) {
@@ -75,6 +69,10 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 		}
 	}
 
+	/**
+	 * 
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void reduce(Text key, Iterable<Text> values, Context context)
 			throws IOException, InterruptedException {
 
@@ -88,21 +86,27 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 		for (Text item : values) {
 			Map<String, Object> map = new HashMap<String, Object>();
 			map = gson.fromJson(item.toString(), map.getClass());
-			if (map.containsKey("dt")) {
-				timeTag.put("{" + map.get("tagType") + "." + map.get("tagname")
-						+ "}", map.get("tagValue") + "");
-			} else {
-				timeTag.put("{" + map.get("tagType") + "." + map.get("tagname")
-						+ "}" + map.get("dt"), map.get("tagValue") + "");
-			}
+
+			timeTag.put("{" + map.get("tagType") + "." + map.get("tagName")
+					+ "}" + map.get("dt"), map.get("tagValue") + "");
 		}
 
-		List<Map> result = doubleExpr.getTag(jse, timeTag);// 结果集
-		if (result.size() == 0) {
-			return;
+		List<Map> result = new ArrayList<Map>();
+		for (DoubleRule exprInfo : doubleRuleLists) {
+			try {
+				if (exprInfo.getResult(jse, timeTag)) {
+					result.add(exprInfo.getResult());
+				}
+			} catch (ScriptException e) {
+				// TODO Auto-generated catch block
+				context.getCounter("异常", "异常解析规则").increment(1);
+				e.printStackTrace();
+			}
 		}
-		for (Map item : result) {
-			context.write(new Text(), new Text(gson.toJson(item)));
+		if (result.size() > 0) {
+			for (Map item : result) {
+				context.write(new Text(), new Text(gson.toJson(item)));
+			}
 		}
 
 	}

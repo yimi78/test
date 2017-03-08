@@ -1,2 +1,3 @@
-{"key":"张三","tagType":"身份属性"，"tagName":"年龄","tagValue":"22","dt":""}
-{"key":"张三","tagType":"股票"，"tagName":"最大偏好","tagValue":"恒生","dt":""}
+{"key":"张三","tagType":"身份属性","tagName":"年龄","tagValue":"22","dt":""}
+{"key":"李四","tagType":"身份属性","tagName":"年龄","tagValue":"40","dt":""}
+{"key":"张三","tagType":"股票","tagName":"最大偏好","tagValue":"恒生","dt":""}

@@ -11,14 +11,15 @@
  */
 package com.koolbao.maptest.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.impl.cookie.DateUtils;
 
 /**
  * 详细规则
@@ -41,25 +42,22 @@ public class OpRule {
 	public boolean result = false; // 操作类型
 
 	// 返回结果
-	public boolean getResult(ScriptEngine jse, Map<String, String> timeTag) {
+	public String getResult(ScriptEngine jse, Map<String, String> timeTag)
+			throws ScriptException {
 		String params = getParams();
 		String rule = getRule();
 		String jugde = getJudge();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-		if (StringUtils.isBlank(dt)) {
-			// 参数替换
-			for (String item : params.split(",")) {
-				if (!timeTag.containsKey(item)) {
-					return false;
-				}
+		// 参数替换
+		for (String item : params.split(",")) {
+			if (timeTag.containsKey(item)) {
 				rule = rule.replace(item, timeTag.get(item));
 			}
-			try {
-				return (boolean) jse.eval(getRule() + getJudge());
-			} catch (ScriptException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		}
+
+		if (StringUtils.isBlank(dt) || "null".equals(dt)) {
+			return jse.eval(rule + getJudge()).toString();
 		} else {
 			int index = 0;
 			double sum = 0;
@@ -76,16 +74,15 @@ public class OpRule {
 
 			while (!begin.after(getEndTime())) {
 				index++;
-				time = DateUtils.formatDate(begin, "yyyy-MM-dd");
+				time = sdf.format(begin);
 				// 参数替换
-				for (String item : params.split(",")) {
-					if (!timeTag.containsKey(item)) {
-						continue;
-					}
-					rule = rule.replace(item + time, timeTag.get(item + time));
-				}
 				try {
-					tmp = (double) jse.eval(getRule() + getJudge());
+					for (String item : params.split(",")) {
+						if (timeTag.containsKey(item + time)) {
+							rule = rule.replace(item, timeTag.get(item + time));
+						}
+					}
+					tmp = (double) jse.eval(rule);
 					if (max < tmp) {
 						max = tmp;
 					}
@@ -96,25 +93,25 @@ public class OpRule {
 				} catch (ScriptException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					System.out.println(rule + getJudge());
 				}
+				begin = DateUtils.addDays(begin, 1);
 			}
-			try {
-				if ("sum".equals(groupType)) {
-					return (boolean) jse.eval(sum + getJudge());
-				} else if ("min".equals(groupType)) {
-					return (boolean) jse.eval(min + getJudge());
-				} else if ("max".equals(groupType)) {
-					return (boolean) jse.eval(max + getJudge());
-				} else if ("avg".equals(groupType)) {
-					Double avg = sum / index;
-					return (boolean) jse.eval(avg + getJudge());
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 
-		return false;
+			Object result = null;
+			if ("sum".equals(getGroupType())) {
+				result = jse.eval(sum + getJudge());
+			} else if ("min".equals(getGroupType())) {
+				result = jse.eval(min + getJudge());
+			} else if ("max".equals(getGroupType())) {
+				result = jse.eval(max + getJudge());
+			} else if ("avg".equals(getGroupType())) {
+				Double avg = sum / index;
+				result = jse.eval(avg + getJudge());
+			}
+
+			return result.toString();
+		}
 	}
 
 	/**
@@ -128,19 +125,23 @@ public class OpRule {
 		this.setRule(map.get("rule") + "");
 		this.setJudge(map.get("judge") + "");
 		this.setDt(map.get("dt") + "");
-		this.setDt(map.get("params") + "");
+		this.setParams(map.get("params") + "");
 		this.setGroupType(map.get("groupType") + "");
 
 		try {
-			if (StringUtils.isBlank(dt) && !"null".equals(dt)) {
+			if (StringUtils.isNotBlank(dt) && !"null".equals(dt)) {
 				isDt = true;
 				if (dt.contains(":")) {
 					String[] dts = this.dt.split(":");
-					this.setBeginTime(DateUtils.parseDate(dts[0]));
-					this.setEndTime(DateUtils.parseDate(dts[1]));
+					this.setBeginTime(DateUtils.parseDate(dts[0],
+							new String[] { "yyyy-MM-dd" }));
+					this.setEndTime(DateUtils.parseDate(dts[1],
+							new String[] { "yyyy-MM-dd" }));
 				} else {
-					this.setBeginTime(DateUtils.parseDate(dt));
-					this.setEndTime(DateUtils.parseDate(dt));
+					this.setBeginTime(DateUtils.parseDate(dt,
+							new String[] { "yyyy-MM-dd" }));
+					this.setEndTime(DateUtils.parseDate(dt,
+							new String[] { "yyyy-MM-dd" }));
 				}
 			}
 		} catch (Exception e) {

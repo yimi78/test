@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 /**
  * 标签二次规则
@@ -51,11 +52,16 @@ public class DoubleRule {
 	}
 
 	// 判断结果
-	public boolean getResult(ScriptEngine jse, Map<String, String> timeTag) {
+	public boolean getResult(ScriptEngine jse, Map<String, String> timeTag)
+			throws ScriptException {
 		resultMap.put("key", timeTag.get("key"));
 		for (OpRule item : rules) {
-			if (!item.getResult(jse, timeTag)) {
+			String result = item.getResult(jse, timeTag);
+			if ("false".equals(result)) {
 				return false;
+			}
+			if ("计算".equals(getTagValue())) {
+				getResult().put("tagValue", result);
 			}
 		}
 		return true;
