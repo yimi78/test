@@ -37,7 +37,7 @@ public class DoubleTag {
 		job.setOutputKeyClass(Text.class);
 		job.setNumReduceTasks(1);
 		job.setOutputValueClass(Text.class);
-		job.addCacheFile(new URI("outResource/DoubleTag#file"));
+		job.addCacheFile(new URI("outResource/DoubleTag"));
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		Path out = new Path(args[1]);
 		if (FileSystem.get(conf).exists(out)) {
