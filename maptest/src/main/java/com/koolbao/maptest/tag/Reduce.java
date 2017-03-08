@@ -11,6 +11,7 @@
  */
 package com.koolbao.maptest.tag;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,9 +21,7 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
@@ -52,9 +51,13 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 			InterruptedException {
 		List<String> list = new ArrayList<String>();
 		try {
-			Path[] path = context.getLocalCacheFiles();
-			list = IOUtils.readLines(FileSystem.get(context.getConfiguration())
-					.open(path[0]));
+			// Path[] path = context.getLocalCacheFiles();
+			// list =
+			// IOUtils.readLines(FileSystem.get(context.getConfiguration())
+			// .open(path[0]));
+			FileUtils
+					.readLines(new File(
+							"C:\\development\\Development\\Git\\data\\test\\maptest\\outResource\\DoubleTag"));
 			context.getCounter("规则条数", list.size() + "");
 
 			Map<String, Object> expr = new HashMap<String, Object>();
